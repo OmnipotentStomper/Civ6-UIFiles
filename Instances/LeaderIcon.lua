@@ -184,11 +184,15 @@ function LeaderIcon:GetToolTipString(playerID:number)
 	local pPlayerConfig:table = PlayerConfigurations[playerID];
 
 	if pPlayerConfig and pPlayerConfig:GetLeaderTypeName() then
-		local isHuman:boolean = pPlayerConfig:IsHuman();
-		local localPlayerID:number = Game.GetLocalPlayer();
-		local leaderDesc:string = pPlayerConfig:GetLeaderName();
-		local civDesc:string = pPlayerConfig:GetCivilizationDescription();
+		local isHuman		:boolean = pPlayerConfig:IsHuman();
+		local leaderDesc	:string = pPlayerConfig:GetLeaderName();
+		local civDesc		:string = pPlayerConfig:GetCivilizationDescription();
+		local localPlayerID	:number = Game.GetLocalPlayer();
 		
+		if localPlayerID==-1 or localPlayerID==1000  then
+			return;
+		end		
+
 		if GameConfiguration.IsAnyMultiplayer() and isHuman then
 			if(playerID ~= localPlayerID and not Players[localPlayerID]:GetDiplomacy():HasMet(playerID)) then
 				result = Locale.Lookup("LOC_DIPLOPANEL_UNMET_PLAYER") .. " (" .. pPlayerConfig:GetPlayerName() .. ")";
