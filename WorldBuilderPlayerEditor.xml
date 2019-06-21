@@ -160,7 +160,7 @@
 
 	<!-- Player Civics Tab -->
 	<Instance Name="PlayerCivicsInstance">
-    <Grid Size="265,parent" Style="DecoGrid" Color="26,61,90,255">
+    <Grid Size="325,parent" Style="DecoGrid" Color="26,61,90,255">
       <!-- Civics Header -->
       <Grid Size="parent,21" Offset="0,12" Texture="Shell_SectionHeader" SliceCorner="4,10" SliceSize="300,1" SliceTextureSize="308,21" Color="20,144,140,100" >
         <Image Texture="Controls_Gradient_HalfRadial" Color="20,144,140,100" FlipY="1" Anchor="C,T" Size="225,94"/>

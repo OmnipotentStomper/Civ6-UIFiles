@@ -186,7 +186,6 @@ function OnCommitTextKey(text, control)
 		controlEntry.Key = text;
 		WorldBuilder.ModManager():SetKeyStringPairByIndex(controlEntry.Index, controlEntry.Key, controlEntry.Text, controlEntry.ForLanguage);		
 		m_TextEntries[controlEntry.Index].Key = text;
-		m_ViewingTab.TextInstance.KeyStringList:SetEntries( m_TextEntries, i );
 		ChangeRemoveStatus(i);
 		RefreshAnnotations();
 	end
@@ -207,7 +206,6 @@ function OnCommitTextString(text, control)
 		controlEntry.Text = text;
 		WorldBuilder.ModManager():SetKeyStringPairByIndex(controlEntry.Index, controlEntry.Key, controlEntry.Text, controlEntry.ForLanguage);
 		m_TextEntries[controlEntry.Index].Text = text;
-		m_ViewingTab.TextInstance.KeyStringList:SetEntries( m_TextEntries, i );
 		ChangeRemoveStatus(i);
 		RefreshAnnotations();
 	end
@@ -265,8 +263,11 @@ function OnKeyStringListSelection(entry)
 					m_ViewingTab.TextInstance.TextTagEditBox:SetDisabled(false);
 					m_ViewingTab.TextInstance.TextTagEditBox:RegisterCommitCallback(OnCommitTextKey);
 					m_ViewingTab.TextInstance.TextTagEditBox:RegisterStringChangedCallback(OnChangedTextKey);
+					m_ViewingTab.TextInstance.TextTagEditGrid:SetColor(1.0,1.0,1.0,1.0);
 				else
 					m_ViewingTab.TextInstance.TextTagEditBox:SetDisabled(true);
+					-- Alpha out the color of the background to indicate it cannot be edited
+					m_ViewingTab.TextInstance.TextTagEditGrid:SetColor(1.0,1.0,1.0,0.0);
 				end
 
 			end
@@ -309,14 +310,17 @@ end
 -- ===========================================================================
 function OnRemoveText()
 	if (m_ViewingTab ~= nil and m_ViewingTab.TextInstance ~= nil) then
-		local iSelectedIndex = m_ViewingTab.TextInstance.KeyStringList:GetSelectedIndex();
+		local iSelectedIndex:number = m_ViewingTab.TextInstance.KeyStringList:GetSelectedIndex();
 		if iSelectedIndex ~= nil then
-			local entry = m_TextEntries[ iSelectedIndex ];
-			if entry ~= nil then
-				
-				WorldBuilder.ModManager():RemoveString(entry.Key, entry.ForLanguage);		
+			local kEntryToRemove:table = m_TextEntries[ iSelectedIndex ];
+			if kEntryToRemove ~= nil then
 
+				WorldBuilder.ModManager():RemoveString(kEntryToRemove.Key, kEntryToRemove.ForLanguage);		
+				
 				UpdateTextPage();	-- This is overkill/inefficient
+
+				-- Select the previous index in the list
+				m_ViewingTab.TextInstance.KeyStringList:SetSelectedIndex(iSelectedIndex-1, true);
 			end
 		end
 	end
@@ -412,17 +416,15 @@ function UpdateGeneralPage()
 	if (m_ViewingTab ~= nil and m_ViewingTab.GeneralInstance ~= nil) then
 		
 		local isMod = WorldBuilder.IsMod();
+		m_ViewingTab.GeneralInstance.IsModCheckbox:SetSelected(isMod);
 
 		if WorldBuilder.GetWBAdvancedMode() then
 			m_ViewingTab.GeneralInstance.IsModCheckbox:SetHide(false);
-			m_ViewingTab.GeneralInstance.IsModCheckbox:SetSelected(isMod);
 
 			m_ViewingTab.GeneralInstance.RulesetEdit:SetDisabled(false);
 			m_ViewingTab.GeneralInstance.MapScriptEdit:SetDisabled(false);
 		else
 			m_ViewingTab.GeneralInstance.IsModCheckbox:SetHide(true);
-			m_ViewingTab.GeneralInstance.IsModCheckbox:SetSelected(true);
-			WorldBuilder.SetMod(true); -- NOTE: need a better way to ensure this is true in basic mode.
 			
 			m_ViewingTab.GeneralInstance.RulesetEdit:SetDisabled(true);
 			m_ViewingTab.GeneralInstance.MapScriptEdit:SetDisabled(true);

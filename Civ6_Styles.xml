@@ -2423,6 +2423,28 @@
   <Civilopedia_ChapterHeaderCaption Anchor="C,C" Style="FontBoldFlair18" SmallCaps="16" SmallCapsLeading="0" SmallCapsType="EveryWord" Color="27,27,27,255" FontStyle="glow"/>
   <Civilopedia_ChapterParagraph Style="FontNormalMedium16" Size="16" Color="0,0,0,255" />
 
-  <!-- EXPERIMENTAL STYLE CLASS MODULES -->
+	<!-- World Builder -->
+	<WorldBuilderPropertyLabel Style="FontNormal14" Anchor="L,C" TruncatedTooltip="1" TruncateWidth="270" />
+
+	<WorldBuilderPullDownLabel Style="FontNormal12" ColorSet="ShellOptionText" FontStyle="stroke" TruncatedTooltip="1" TruncateWidth="120" />
+
+	<WorldBuilderPropertyPullDown  Size="200,24" ScrollThreshold="312" AutoSizePopup="1" AutoFlip="1" SpaceForScroll="0" EntryInstance="InstanceOne">
+		<ButtonData>
+			<GridButton  Size="194,28" Style="TabFont" TruncatedTooltip="1" TruncateWidth="194">
+				<GridData Texture="Controls_DropDownControl" StateOffsetIncrement="0,24"	SliceCorner="10,12"	SliceSize="1,1"		SliceTextureSize="45,24" />
+			</GridButton>
+		</ButtonData>
+		<GridData Offset="0,24" Texture="Controls_DropdownPanel" InnerPadding="3,6" SliceCorner="10,10" SliceTextureSize="22,22"/>
+		<ScrollPanelData Anchor="C,C" Vertical="1" Size="parent,parent" AutoScrollBar="1" >
+			<ScrollBar Style="Slider_Blue" Anchor="R,C" AnchorSide="O,I"   />
+		</ScrollPanelData>
+		<StackData StackGrowth="Bottom" Anchor="C,T"/>
+		<InstanceData Name="InstanceOne">
+			<GridButton ID="Button" Style="ButtonControl" Size="190,24" FontStyle="glow" ColorSet="BlueGlow" TruncatedTooltip="1" TruncateWidth="194" />
+		</InstanceData>
+	</WorldBuilderPropertyPullDown>
+
+
+	<!-- EXPERIMENTAL STYLE CLASS MODULES -->
 
 </StyleSheet>

@@ -68,7 +68,11 @@ Controls.BackButton:RegisterCallback( Mouse.eMouseEnter, function() UI.PlaySound
 function InputHandler( uiMsg, wParam, lParam )
 	if uiMsg == KeyEvents.KeyUp then
 		if wParam == Keys.VK_ESCAPE then
-			BackButtonClick();
+			if Controls.SwitchPopup:IsHidden() then
+				BackButtonClick();
+			else
+				Controls.SwitchPopup:SetHide(true);
+			end
 		end
 	end
 	return true;

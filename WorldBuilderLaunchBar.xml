@@ -20,7 +20,7 @@
     </Grid>
   </Container>
 
-  <Box Anchor="R,T" Size="360,200"  Offset="4,0" Color="9,44,72,200">
+  <Box Anchor="R,T" Size="360,200"  Offset="4,0" Color="9,44,72,200" ConsumeMouse="1" >
 	<Box Color="32,70,101,150" Anchor="L,T" Size="2,parent"/>
 	<Box Color="32,70,101,150" Anchor="R,T" Size="2,parent"/>
 	<Box Color="32,70,101,150" Anchor="L,T" Size="parent,2"/>

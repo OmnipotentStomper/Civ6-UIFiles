@@ -92,8 +92,18 @@ end
 
 -- ===========================================================================
 --	Add a leader (from right to left)
+--	iconName,	What icon to draw for the leader portrait
+--	playerID,	gamecore's player ID
+--	kProps,		(optional) properties about the leader
+--					isUnique, no other leaders are like this one
+--					isMasked, even if stats are show, hide their values.
 -- ===========================================================================
-function AddLeader(iconName : string, playerID : number, isUniqueLeader: boolean)
+function AddLeader(iconName : string, playerID : number, kProps: table)
+	
+	local isUnique:boolean = false;
+	if kProps == nil then kProps={}; end
+	if kProps.isUnqiue then	isUnqiue=kProps.isUnqiue; end
+
 	m_leadersMet = m_leadersMet + 1;
 
 	-- Create a new leader instance
@@ -102,7 +112,7 @@ function AddLeader(iconName : string, playerID : number, isUniqueLeader: boolean
 	m_uiLeadersByID[playerID] = uiLeader;
 	m_uiLeadersByPortrait[uiPortraitButton] = uiLeader;
 
-	leaderIcon:UpdateIcon(iconName, playerID, isUniqueLeader);
+	leaderIcon:UpdateIcon(iconName, playerID, isUnqiue);
 	leaderIcon:RegisterCallback(Mouse.eLClick, function() OnLeaderClicked(playerID); end);
 
 	-- If using focus, setup mouse in/out callbacks... otherwise clear them.
@@ -128,7 +138,7 @@ function AddLeader(iconName : string, playerID : number, isUniqueLeader: boolean
 		end
 	);
 
-	FinishAddingLeader( playerID, uiLeader );
+	FinishAddingLeader( playerID, uiLeader, kProps );
 
 	-- Returning these so mods can override them and modify the icons
 	return leaderIcon, uiLeader;
@@ -139,14 +149,25 @@ end
 --	Complete adding a leader.
 --	Two steps for allowing easier MOD overrides/explansion.
 -- ===========================================================================
-function FinishAddingLeader( playerID:number, uiLeader:table)
-	-- Show fields for enabled victory types.
-	uiLeader.Score:SetHide( not (GameConfiguration.IsAnyMultiplayer() or Game.IsVictoryEnabled("VICTORY_SCORE")));
-	uiLeader.Military:SetHide( not Game.IsVictoryEnabled("VICTORY_CONQUEST") or not GameCapabilities.HasCapability("CAPABILITY_DISPLAY_TOP_PANEL_YIELDS") );
-	uiLeader.Science:SetHide( not HasCapability("CAPABILITY_SCIENCE") or not GameCapabilities.HasCapability("CAPABILITY_DISPLAY_TOP_PANEL_YIELDS") );
-	uiLeader.Culture:SetHide( not HasCapability("CAPABILITY_CULTURE") or not GameCapabilities.HasCapability("CAPABILITY_DISPLAY_TOP_PANEL_YIELDS") );
-	uiLeader.Gold:SetHide( not HasCapability("CAPABILITY_GOLD") or not GameCapabilities.HasCapability("CAPABILITY_DISPLAY_TOP_PANEL_YIELDS") );
-	uiLeader.Faith:SetHide( not HasCapability("CAPABILITY_RELIGION") or not GameCapabilities.HasCapability("CAPABILITY_DISPLAY_TOP_PANEL_YIELDS") );
+function FinishAddingLeader( playerID:number, uiLeader:table, kProps:table)
+
+	local isMasked:boolean = false;
+	if kProps.isMasked then	isMasked = kProps.isMasked; end
+
+	-- Show fields for enabled victory types.	
+	local isHideScore	:boolean = isMasked or (not (GameConfiguration.IsAnyMultiplayer() or Game.IsVictoryEnabled("VICTORY_SCORE")));
+	local isHideMilitary:boolean = isMasked or (not Game.IsVictoryEnabled("VICTORY_CONQUEST") or not GameCapabilities.HasCapability("CAPABILITY_DISPLAY_TOP_PANEL_YIELDS"));
+	local isHideScience	:boolean = isMasked or (not HasCapability("CAPABILITY_SCIENCE") or not GameCapabilities.HasCapability("CAPABILITY_DISPLAY_TOP_PANEL_YIELDS"));
+	local isHideCulture :boolean = isMasked or (not HasCapability("CAPABILITY_CULTURE") or not GameCapabilities.HasCapability("CAPABILITY_DISPLAY_TOP_PANEL_YIELDS"));
+	local isHideGold	:boolean = isMasked or (not HasCapability("CAPABILITY_GOLD") or not GameCapabilities.HasCapability("CAPABILITY_DISPLAY_TOP_PANEL_YIELDS"));
+	local isHideFaith	:boolean = isMasked or (not HasCapability("CAPABILITY_RELIGION") or not GameCapabilities.HasCapability("CAPABILITY_DISPLAY_TOP_PANEL_YIELDS"));
+
+	uiLeader.Score:SetHide( isHideScore );
+	uiLeader.Military:SetHide( isHideMilitary );
+	uiLeader.Science:SetHide( isHideScience );
+	uiLeader.Culture:SetHide( isHideCulture );
+	uiLeader.Gold:SetHide( isHideGold );
+	uiLeader.Faith:SetHide( isHideFaith );
 	
 	UpdateStatValues( playerID, uiLeader );
 end
@@ -172,8 +193,8 @@ function UpdateLeaders()
 		local localDiplomacy:table = localPlayer:GetDiplomacy();
 		table.sort(kPlayers, function(a:table,b:table) return localDiplomacy:GetMetTurn(a:GetID()) < localDiplomacy:GetMetTurn(b:GetID()) end);
 				
-		AddLeader("ICON_"..PlayerConfigurations[localPlayerID]:GetLeaderTypeName(), localPlayerID);		--First, add local player.
-		kMetPlayers, kUniqueLeaders = GetMetPlayersAndUniqueLeaders();									--Fill table for other players.
+		AddLeader("ICON_"..PlayerConfigurations[localPlayerID]:GetLeaderTypeName(), localPlayerID, {});		--First, add local player.
+		kMetPlayers, kUniqueLeaders = GetMetPlayersAndUniqueLeaders();										--Fill table for other players.
 	else
 		-- No local player so assume it's auto-playing; show everyone.
 		for _, pPlayer in ipairs(kPlayers) do
@@ -193,15 +214,23 @@ function UpdateLeaders()
 		if(playerID ~= localPlayerID) then
 			local isMet			:boolean = kMetPlayers[playerID];
 			local pPlayerConfig	:table = PlayerConfigurations[playerID];
-			if (isMet or (GameConfiguration.IsAnyMultiplayer() and pPlayerConfig:IsHuman())) then
+			local isHumanMP		:boolean = (GameConfiguration.IsAnyMultiplayer() and pPlayerConfig:IsHuman());
+			if (isMet or isHumanMP) then
 				local leaderName:string = pPlayerConfig:GetLeaderTypeName();
+				local isMasked	:boolean = (isMet==false) and isHumanMP;	-- Multiplayer human but haven't met
+				local isUnique	:boolean = kUniqueLeaders[leaderName];
+				local iconName	:string = "ICON_LEADER_DEFAULT";
 				
-				-- If in an MP game and a player leaves the name returned will be NIL.
-				if isMet and (leaderName ~= nil) then					
-					AddLeader("ICON_"..leaderName, playerID, kUniqueLeaders[leaderName]);
-				else
-					AddLeader("ICON_LEADER_DEFAULT", playerID);
+				-- If in an MP game and a player leaves the name returned will be NIL.				
+				if isMet and (leaderName ~= nil) then
+					iconName = "ICON_"..leaderName;
 				end
+				
+				AddLeader(iconName, playerID, { 
+					isMasked=isMasked,
+					isUnique=isUnique
+					}
+				);
 			end
 		end
 	end
@@ -514,6 +543,12 @@ function OnTurnBegin( playerID:number )
 			uiLeader.ActiveSlide:SetToBeginning();
 			uiLeader.ActiveSlide:Play();
 		end
+	end
+
+	-- Kluge: autoplay layout will frequently size ribbon before other panels and place it behind them in t he HUD.
+	local isAutoPlay:boolean = (Game.GetLocalPlayer() == -1);
+	if isAutoPlay then
+		RealizeSize();
 	end
 
 	m_kActiveIds[playerID] = true;

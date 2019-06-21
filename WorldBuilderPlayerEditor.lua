@@ -427,20 +427,21 @@ function UpdatePlayerList()
 	local selected = 1;
 	local entryCount = 0;
 
-	local iMaxPlayers = WorldBuilder.PlayerManager():GetMaxPlayers() - 1;	-- -1, for a Lua loop
-	for i = 0, iMaxPlayers do
-
+	for i = 0, GameDefines.MAX_PLAYERS-1 do 
 		local eStatus = WorldBuilder.PlayerManager():GetSlotStatus(i); 
 		if eStatus ~= SlotStatus.SS_CLOSED then
-			local playerEntry = {};
-			playerEntry.Index = i;
-			UpdatePlayerEntry(playerEntry);
-			table.insert(m_PlayerEntries, playerEntry);
-			m_PlayerIndexToEntry[i] = playerEntry;
-			entryCount = entryCount + 1;
+			local playerConfig = WorldBuilder.PlayerManager():GetPlayerConfig(i);
+			if playerConfig.IsBarbarian == false then	-- Skipping the Barbarian player
+				local playerEntry = {};
+				playerEntry.Index = i;
+				UpdatePlayerEntry(playerEntry);
+				table.insert(m_PlayerEntries, playerEntry);
+				m_PlayerIndexToEntry[i] = playerEntry;
+				entryCount = entryCount + 1;
 
-			if m_SelectedPlayer ~= nil and m_SelectedPlayer.Index == playerEntry.Index then
-				selected = entryCount;
+				if m_SelectedPlayer ~= nil and m_SelectedPlayer.Index == playerEntry.Index then
+					selected = entryCount;
+				end
 			end
 		end
 	end

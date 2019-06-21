@@ -127,7 +127,7 @@ function SetResourceIcon( pInstance:table, pPlot, type, state)
 			local tValidImprovements:table = {}
 			for row in GameInfo.Improvement_ValidResources() do
 				if (row.ResourceType == resourceType) then
-					if( GameInfo.Terrains[terrainType].TerrainType   == "TERRAIN_COAST") then
+					if( terrainType == "TERRAIN_COAST") then
 						if ("DOMAIN_SEA" == GameInfo.Improvements[ row.ImprovementType].Domain) then
 							table.insert(tValidImprovements, row.ImprovementType);
 						elseif ("DOMAIN_LAND" == GameInfo.Improvements[ row.ImprovementType].Domain) then

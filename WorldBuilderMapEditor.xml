@@ -181,13 +181,13 @@
         <Stack Anchor="R,T" Offset="20,16" StackGrowth="Down" StackPadding="4">
           <Stack Anchor="R,T" StackGrowth="Right" StackPadding="4">
             <Label Anchor="R,T" Offset="0,5" Size="80,30" Style="ShellOptionText" String="LOC_WORLDBUILDER_TEXT_TAG"/>
-            <Grid Style="EditTextArea" Size="450,30" InnerPadding="6,6">
+            <Grid ID="TextTagEditGrid" Style="EditTextArea" Size="450,30" InnerPadding="6,6">
               <EditBox ID="TextTagEditBox" Offset="4,0" Size="parent,parent" EditMode="1" Style="FontNormal16" ColorSet="BodyTextCool" FontStyle="stroke"/>
             </Grid>
           </Stack>
           <Stack Anchor="R,T" StackGrowth="Right" StackPadding="4">
             <Label Anchor="R,T" Offset="0,5" Size="80,30" Style="ShellOptionText" String="LOC_WORLDBUILDER_TEXT_STRING"/>
-            <Grid Style="EditTextArea" Size="450,30" InnerPadding="6,6">
+            <Grid ID="TextStringEditGrid" Style="EditTextArea" Size="450,30" InnerPadding="6,6">
               <EditBox ID="TextStringEditBox" Offset="4,0" Size="parent,parent" EditMode="1" Style="FontNormal16" ColorSet="BodyTextCool" FontStyle="stroke"/>
             </Grid>
           </Stack>

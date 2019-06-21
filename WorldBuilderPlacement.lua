@@ -44,6 +44,7 @@ local m_RegenDelay			   : number = 0;
 local m_CoastIndex			   : number = 1;
 local m_MouseDownHex		   : number = 1;
 local m_MouseDownEdge		   : number = 1;
+local m_UndoItemCount		   : number = 0;
 local m_bLastMouseWasDown	   : boolean = false;
 local m_bDragInProgress		   : boolean = false;
 
@@ -70,10 +71,19 @@ function UpdateWonderList()
 		local pkPlot : table = Map.GetPlotByIndex(plotIndex);
 		local featureType : number = pkPlot:GetFeatureType();
 		if featureType ~= nil and featureType ~= -1 then
-			table.insert(m_WonderList, featureType+1);
+			local bAdd:boolean = true;
+			for i,entry in pairs(m_WonderList) do
+				if entry == featureType+1 then
+					bAdd = false;
+					break;
+				end
+			end
+			if bAdd then
+				table.insert(m_WonderList, featureType+1);
+--				print("UpdateWonderList: adding "..tostring(featureType+1));
+			end
 		end
 	end
-
 end
 
 -- ===========================================================================
@@ -351,6 +361,7 @@ function OnPlotSelected(plotID, edge, lbutton, rbutton)
 		elseif not m_InAnUndoGroup then
    			WorldBuilder.StartUndoBlock();
    			m_InAnUndoGroup = true;
+			m_UndoItemCount = 0;
 		end
 
 		-- eat false delete for single-click placement
@@ -370,7 +381,6 @@ function OnPlotSelected(plotID, edge, lbutton, rbutton)
 			OnPlotSelected(m_MouseDownHex, m_MouseDownEdge, true);
 		end
 
-
 		local mode = Controls.PlacementPullDown:GetSelectedEntry();
 		local kPlot : table = Map.GetPlotByIndex(plotID);
 		if m_BrushEnabled and m_BrushSize > 1 then
@@ -378,8 +388,11 @@ function OnPlotSelected(plotID, edge, lbutton, rbutton)
 			m_ExcludePlots = {};
 			table.insert(m_ExcludePlots, kPlot);
 		else
+			m_ExcludePlots = {};
 			mode.PlacementFunc(plotID, edge, lbutton, true);
 		end
+
+		m_UndoItemCount = m_UndoItemCount + 1;
 
 		-- update the cursor status
 		OnPlotMouseOver(plotID);
@@ -391,6 +404,7 @@ function OnPlotSelected(plotID, edge, lbutton, rbutton)
 				if adjPlots[i] ~= nil and PlacementValid(adjPlots[i]:GetIndex(), mode) then
 					mode.PlacementFunc(adjPlots[i]:GetIndex(), edge, lbutton, true);
 					table.insert(m_ExcludePlots, adjPlots[i]);
+					m_UndoItemCount = m_UndoItemCount + 1;
 				end
 			end
 		elseif m_BrushEnabled and m_BrushSize == 19 then
@@ -400,6 +414,7 @@ function OnPlotSelected(plotID, edge, lbutton, rbutton)
 				if adjPlots[i] ~= nil and PlacementValid(adjPlots[i]:GetIndex(), mode) then
 					mode.PlacementFunc(adjPlots[i]:GetIndex(), edge, lbutton, false);
 					table.insert(m_ExcludePlots, adjPlots[i]);
+					m_UndoItemCount = m_UndoItemCount + 1;
 				end
 			end
 
@@ -421,8 +436,16 @@ function OnPlotSelected(plotID, edge, lbutton, rbutton)
 			for _, plot in pairs(outerPlots) do
 				mode.PlacementFunc(plot:GetIndex(), edge, lbutton, true);
 				table.insert(m_ExcludePlots, plot);
+				m_UndoItemCount = m_UndoItemCount + 1;
 			end
 		end
+	end
+
+	-- break undos up into blocks of 1000 operations
+	if m_InAnUndoGroup and m_UndoItemCount >= 800 then
+		WorldBuilder.EndUndoBlock();
+		WorldBuilder.StartUndoBlock();
+		m_UndoItemCount = 0;
 	end
 end
 
@@ -621,7 +644,7 @@ function PlaceTerrain(plot, edge, bAdd, bOuter)
 
 		PlaceTerrainInternal(plot, edge, bAdd, terrain.Type.Index, terrain.Type.Name);
 
-		if true then --bOuter then
+		if bOuter then
 			for i = 1, 6, 1 do
 				if adjPlots[i] ~= nil then
 					local bExclude:boolean = false;
@@ -695,17 +718,23 @@ function PlaceFeature(plot, edge, bAdd)
 			WorldBuilder.MapManager():SetFeatureType( plot, entry.Type.Index );
 			LuaEvents.WorldBuilder_SetPlacementStatus(Locale.Lookup("LOC_WORLDBUILDER_BLANK_PLACEMENT_OK", entry.Text));
 			UI.PlaySound("UI_WB_Placement_Succeeded");
+			if entry.NaturalWonder then
+--				print("Placing natural wonder "..tostring(entry.Type.Index));
+				table.insert(m_WonderList, entry.Type.Index);
+			end
 		else
 			LuaEvents.WorldBuilder_SetPlacementStatus(Locale.Lookup("LOC_WORLDBUILDER_FAILURE_FEATURE"));
 			UI.PlaySound("UI_WB_Placement_Failed");
 		end
 	else
-		if Map.GetPlotByIndex(plot):GetFeatureType() ~= -1 then
+
+		if Map.GetPlotByIndex(plot):GetFeatureType()  ~= -1 then
+			local terrType:number = Map.GetPlotByIndex(plot):GetTerrainType();
 			WorldBuilder.MapManager():SetFeatureType( plot, -1 );
+			WorldBuilder.MapManager():SetTerrainType( plot, terrType );
+			UpdateWonderList();
 		end
 	end
-
-	UpdateWonderList();
 end
 
 -- ===========================================================================
@@ -1260,7 +1289,12 @@ end
 
 -- ===========================================================================
 function SelectCityOwner(playerIndex)
-	Controls.CityOwnerPullDown:SetSelectedIndex(playerIndex + 1, true);
+	for i, entry in pairs(m_ScenarioPlayerEntries) do
+		if playerIndex == entry.PlayerIndex then
+			Controls.CityOwnerPullDown:SetSelectedIndex(i, true);
+			break;
+		end
+	end
 end
 
 -- ===========================================================================
@@ -1490,7 +1524,7 @@ function OnInit()
 	Controls.UnitPullDown:SetEntries( m_UnitTypeEntries, 1 );
 	Controls.UnitPullDown:SetHide(true);
 
-	-- ImprovementPullDown and GoodyHutPullDown
+	-- ImprovementPullDown
 	idx = 1;
 	for type in GameInfo.Improvements() do
 		table.insert(m_ImprovementTypeEntries, { Text=type.Name, Type=type, Index=idx, PrimaryKey=type.PrimaryKey });

@@ -279,7 +279,7 @@ function GetDetails(data)
 				end
 				valid_terrain = not has_terrain or valid_terrain;
 				
-				if( GameInfo.Terrains[terrainType].TerrainType  == "TERRAIN_COAST") then
+				if( terrainType ~= nil and GameInfo.Terrains[terrainType].TerrainType  == "TERRAIN_COAST") then
 					if ("DOMAIN_SEA" == GameInfo.Improvements[improvementType].Domain) then
 						valid_terrain = true;
 					elseif ("DOMAIN_LAND" == GameInfo.Improvements[improvementType].Domain) then
@@ -704,6 +704,8 @@ function FetchAdditionalData( pPlot:table, kPlotData:table )
 		kPlotData.NationalPark = "";
 	end
 				
+	local plotId = pPlot:GetIndex();
+
 	if (kPlotData.OwnerCity) then
 		kPlotData.OwningCityName = kPlotData.OwnerCity:GetName();
 

@@ -121,14 +121,21 @@ end
 --	playerID, Index of the player to compare a relationship.  (May be self.)
 -- ===========================================================================
 function LeaderIcon:UpdateTeamAndRelationship( playerID: number)
+
+	local localPlayerID	:number = Game.GetLocalPlayer();
+	if localPlayerID == -1 or playerID == 1000 then return; end		--  Local player is auto-play.
+
+	-- Don't even attempt it, just hide the icon if this game mode doesn't have the capabilitiy.
+	if GameCapabilities.HasCapability("CAPABILITY_DISPLAY_HUD_RIBBON_RELATIONSHIPS") == false then
+		self.Controls.Relationship:SetHide( true );
+		return;
+	end
 	
+	-- Nope, autoplay or observer
 	if playerID < 0 then 
 		UI.DataError("Invalid playerID="..tostring(playerID).." to check against for UpdateTeamAndRelationship().");
 		return; 
 	end	
-	
-	local localPlayerID	:number = Game.GetLocalPlayer();
-	if localPlayerID < 0 then return; end		--  Local player is auto-play.
 
 	local pPlayer		:table = Players[playerID];
 	local pPlayerConfig	:table = PlayerConfigurations[playerID];	
