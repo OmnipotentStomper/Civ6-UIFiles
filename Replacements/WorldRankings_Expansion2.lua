@@ -698,9 +698,21 @@ function ViewDiplomatic(victoryType:string)
 
 	for i, theData in ipairs(ourData) do
 		if #theData.teamData.PlayerData > 1 then
-			PopulateGenericTeamInstance(m_GenericTeamIM:GetInstance(), theData.teamData, victoryType);
+			local uiGenericInstance:table = m_GenericTeamIM:GetInstance()
+			uiGenericInstance.ButtonBG:SetToolTipString("");
+			PopulateGenericTeamInstance(uiGenericInstance, theData.teamData, victoryType);
 		else
-			PopulateGenericInstance(m_GenericIM:GetInstance(), theData.teamData.PlayerData[1], victoryType, true);
+			local uiGenericInstance:table = m_GenericIM:GetInstance();
+			local pPlayer:table = Players[theData.teamData.PlayerData[1].PlayerID];
+			if pPlayer ~= nil then
+				local pStats:table = pPlayer:GetStats();
+				if pStats == nil then
+					UI.DataError("Stats not found for PlayerID:" .. theData.teamData.PlayerData[1].PlayerID .. "! WorldRankings XP2");
+					return;
+				end
+				uiGenericInstance.ButtonBG:SetToolTipString(pStats:GetDiplomaticVictoryPointsTooltip());
+			end
+			PopulateGenericInstance(uiGenericInstance, theData.teamData.PlayerData[1], victoryType, true);
 		end
 	end
 

@@ -55,9 +55,15 @@ end
 -- ===========================================================================
 --	OVERRIDE
 -- ===========================================================================
-function FinishAddingLeader( playerID:number, uiLeader:table)	
-	uiLeader.Favor:SetHide(not Game.IsVictoryEnabled("VICTORY_DIPLOMATIC"));	--TODO: Change to capability check when favor is added to capability sytsem.
-	BASE_FinishAddingLeader( playerID, uiLeader );
+function FinishAddingLeader( playerID:number, uiLeader:table, kProps:table)	
+
+	local isMasked:boolean = false;
+	if kProps.isMasked then	isMasked = kProps.isMasked; end
+	
+	local isHideFavor	:boolean = isMasked or (not Game.IsVictoryEnabled("VICTORY_DIPLOMATIC"));		--TODO: Change to capability check when favor is added to capability system.
+	uiLeader.Favor:SetHide( isHideFavor );
+
+	BASE_FinishAddingLeader( playerID, uiLeader, kProps );
 end
 
 -- ===========================================================================
